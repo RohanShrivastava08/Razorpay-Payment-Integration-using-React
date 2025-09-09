@@ -21,7 +21,7 @@ const App = () => {
       const apiBase = (
         import.meta.env.VITE_API_URL || "http://localhost:8000"
       ).replace(/\/$/, "");
-      console.log("Using API base:", apiBase); // temp debug, remove later
+      console.log("Fetching from:", `${apiBase}/order`);
       const response = await fetch(`${apiBase}/order`);
       if (!response.ok) {
         throw new Error("Failed to create order: " + response.statusText);
