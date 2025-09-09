@@ -18,7 +18,8 @@ const App = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:8000/order");
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiBase.replace(/\/$/, "")}/order`);
       if (!response.ok) {
         throw new Error("Failed to create order: " + response.statusText);
       }
@@ -28,7 +29,7 @@ const App = () => {
       const options = {
         amount: AMOUNT,
         order_id: orderId,
-        key: "rzp_test_RFStPkOWxpjAKq",
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_RFStPkOWxpjAKq",
         currency: "INR",
         name: "Test Company",
         description: "Test Transaction",
