@@ -16,10 +16,13 @@ const App = () => {
       if (error) {
         alert("Error loading Razorpay: " + error);
         return;
-      }
+      } 
 
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiBase.replace(/\/$/, "")}/order`);
+      const apiBase = (
+        import.meta.env.VITE_API_URL || "http://localhost:8000"
+      ).replace(/\/$/, "");
+      console.log("Using API base:", apiBase); // temp debug, remove later
+      const response = await fetch(`${apiBase}/order`);
       if (!response.ok) {
         throw new Error("Failed to create order: " + response.statusText);
       }
@@ -50,8 +53,13 @@ const App = () => {
 
       const RazorpayConstructor = Razorpay || window.Razorpay;
       if (!RazorpayConstructor || typeof RazorpayConstructor !== "function") {
-        alert("Razorpay checkout didn't load correctly. Check console for details.");
-        console.error("Razorpay constructor not available", { Razorpay, windowRazorpay: window.Razorpay });
+        alert(
+          "Razorpay checkout didn't load correctly. Check console for details."
+        );
+        console.error("Razorpay constructor not available", {
+          Razorpay,
+          windowRazorpay: window.Razorpay,
+        });
         return;
       }
 
@@ -112,14 +120,22 @@ const App = () => {
 
           <div className="status-row">
             <div className="status-left">
-              {error ? <span className="status-error">Error loading checkout</span> : <span className="status-ok">{isLoading ? "Checkout loading…" : "Ready to pay"}</span>}
+              {error ? (
+                <span className="status-error">Error loading checkout</span>
+              ) : (
+                <span className="status-ok">
+                  {isLoading ? "Checkout loading…" : "Ready to pay"}
+                </span>
+              )}
             </div>
             <div className="status-right">Secure · Fast · Reliable</div>
           </div>
         </section>
 
         <footer className="card-footer">
-          <div className="small">By proceeding you agree to the terms and privacy policy.</div>
+          <div className="small">
+            By proceeding you agree to the terms and privacy policy.
+          </div>
         </footer>
       </div>
     </div>
