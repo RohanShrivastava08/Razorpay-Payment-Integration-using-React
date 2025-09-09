@@ -1,4 +1,3 @@
-// api/order.js
 const Razorpay = require("razorpay");
 
 module.exports = async (req, res) => {
@@ -11,7 +10,7 @@ module.exports = async (req, res) => {
 
   if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
     console.error("❌ Missing Razorpay env vars");
-    return res.status(500).json({ error: "Server config error" });
+    return res.status(500).json({ error: "Missing Razorpay env vars (set in Vercel)" });
   }
 
   try {
@@ -32,7 +31,18 @@ module.exports = async (req, res) => {
       key: RAZORPAY_KEY_ID,
     });
   } catch (err) {
+    // Log full error to Vercel logs
     console.error("❌ Razorpay order error:", err);
-    return res.status(500).json({ error: err.message || "Order creation failed" });
+
+    // Return a readable debug response (temporarily) so you can see details in browser
+    const message = err && err.error && err.error.description
+      ? err.error.description
+      : (err && err.message) || "Order creation failed";
+
+    return res.status(500).json({
+      error: message,
+      code: err && err.error && err.error.code,
+      raw: err && typeof err === "object" ? JSON.stringify(err) : String(err)
+    });
   }
 };
