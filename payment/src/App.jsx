@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useRazorpay } from "react-razorpay";
 
 const AMOUNT = 10000;
 
 const App = () => {
   const { error, isLoading, Razorpay } = useRazorpay();
+  const [paymentResult, setPaymentResult] = useState(null); // store payment status
 
   const payNow = async () => {
     try {
@@ -17,65 +18,59 @@ const App = () => {
         return;
       }
 
-      // Call the Vercel serverless function
       const response = await fetch("/api/order");
-      if (!response.ok) {
-        throw new Error("Failed to create order: " + response.statusText);
-      }
+      if (!response.ok) throw new Error("Failed to create order: " + response.statusText);
       const data = await response.json();
       const orderId = data.id || data.order_id;
 
       const options = {
         amount: data.amount,
         order_id: orderId,
-        key: data.key, 
+        key: data.key,
         currency: "INR",
         name: "Test Company",
         description: "Test Transaction",
         handler: function (response) {
-          alert(response.razorpay_payment_id);
-          alert(response.razorpay_order_id);
-          alert(response.razorpay_signature);
+          setPaymentResult({
+            status: "success",
+            paymentId: response.razorpay_payment_id,
+            orderId: response.razorpay_order_id,
+            signature: response.razorpay_signature,
+          });
         },
         prefill: {
           name: "Razor Singh",
           email: "rajorsingh@example.com",
           contact: "9876543210",
         },
-        theme: {
-          color: "#4f46e5",
-        },
+        theme: { color: "#4f46e5" },
       };
 
       const RazorpayConstructor = Razorpay || window.Razorpay;
       if (!RazorpayConstructor || typeof RazorpayConstructor !== "function") {
-        alert("Razorpay checkout didn't load correctly. Check console for details.");
-        console.error("Razorpay constructor not available", { Razorpay, windowRazorpay: window.Razorpay });
+        console.error("Razorpay checkout not available");
         return;
       }
 
       const razor = new RazorpayConstructor(options);
 
       razor.on("payment.failed", function (response) {
-        alert(response.error.code);
-        alert(response.error.description);
-        alert(response.error.source);
-        alert(response.error.step);
-        alert(response.error.reason);
-        alert(response.error.metadata.order_id);
-        alert(response.error.metadata.payment_id);
+        setPaymentResult({
+          status: "failed",
+          error: response.error.description,
+          code: response.error.code,
+        });
       });
 
       razor.open();
     } catch (err) {
-      console.error("payNow error:", err);
-      alert("Payment failed: " + (err.message || err));
+      setPaymentResult({ status: "failed", error: err.message });
     }
   };
 
   return (
     <div className="page">
-      <div className="card" role="region" aria-label="Payment card">
+      <div className="card">
         <header className="card-header">
           <div className="brand">
             <div className="brand-logo">TC</div>
@@ -87,6 +82,31 @@ const App = () => {
         </header>
 
         <section className="card-body">
+          {/* ✅ Payment result box */}
+          {paymentResult && (
+            <div className={`result-box ${paymentResult.status}`}>
+              {paymentResult.status === "success" ? (
+                <>
+                  <h3>✅ Payment Successful</h3>
+                  <table>
+                    <tbody>
+                      <tr><td>Payment ID</td><td>{paymentResult.paymentId}</td></tr>
+                      <tr><td>Order ID</td><td>{paymentResult.orderId}</td></tr>
+                      <tr><td>Signature</td><td>{paymentResult.signature}</td></tr>
+                    </tbody>
+                  </table>
+                </>
+              ) : (
+                <>
+                  <h3>❌ Payment Failed</h3>
+                  <p>{paymentResult.error}</p>
+                  {paymentResult.code && <p>Error Code: {paymentResult.code}</p>}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Payment amount */}
           <div className="amount-box">
             <div className="amount-left">
               <div className="label">Amount</div>
@@ -98,28 +118,15 @@ const App = () => {
             </div>
           </div>
 
+          {/* Pay button */}
           <div className="actions">
             <button
               className={`btn btn-primary${isLoading ? " disabled" : ""}`}
               onClick={payNow}
               disabled={isLoading}
-              aria-disabled={isLoading}
             >
               {isLoading ? "Loading…" : "Pay ₹100"}
             </button>
-          </div>
-
-          <div className="status-row">
-            <div className="status-left">
-              {error ? (
-                <span className="status-error">Error loading checkout</span>
-              ) : (
-                <span className="status-ok">
-                  {isLoading ? "Checkout loading…" : "Ready to pay"}
-                </span>
-              )}
-            </div>
-            <div className="status-right">Secure · Fast · Reliable</div>
           </div>
         </section>
 

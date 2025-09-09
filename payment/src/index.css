@@ -1,19 +1,25 @@
 /* index.css */
+
+/* ---------- Theme Variables ---------- */
 :root {
-  --page-bg-start: #fbfdff;
+  --page-bg-start: #f9fbff;
   --page-bg-end: #ffffff;
   --card-bg: #ffffff;
   --muted: #6b7280;
   --text: #0f172a;
   --accent: #4f46e5;
   --accent-600: #3730a3;
-  --success: #10b981;
-  --danger: #ef4444;
+  --success-bg: #ecfdf5;
+  --success-border: #10b981;
+  --success-text: #065f46;
+  --danger-bg: #fef2f2;
+  --danger-border: #ef4444;
+  --danger-text: #991b1b;
   --card-radius: 18px;
   --shadow: 0 12px 30px rgba(2, 6, 23, 0.08);
-  --glass: rgba(255, 255, 255, 0.6);
 }
 
+/* ---------- Base ---------- */
 * {
   box-sizing: border-box;
 }
@@ -36,6 +42,7 @@ body {
   color: var(--text);
 }
 
+/* ---------- Layout ---------- */
 .page {
   width: 100%;
   display: flex;
@@ -56,6 +63,7 @@ body {
   grid-template-rows: auto 1fr auto;
 }
 
+/* ---------- Header ---------- */
 .card-header {
   padding: 28px 28px 0 28px;
 }
@@ -88,12 +96,15 @@ body {
   font-size: 13px;
 }
 
+/* ---------- Body ---------- */
 .card-body {
   padding: 20px 28px 24px 28px;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
+
+/* Amount Box */
 .amount-box {
   display: flex;
   align-items: center;
@@ -106,7 +117,8 @@ body {
   border-radius: 12px;
   padding: 18px;
 }
-.amount-left {
+.amount-left,
+.amount-right {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -120,13 +132,12 @@ body {
   font-weight: 600;
   color: var(--text);
 }
-.amount-right {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.currency {
+  font-weight: 500;
+  font-size: 16px;
 }
 
+/* ---------- Buttons ---------- */
 .actions {
   display: flex;
   gap: 12px;
@@ -162,6 +173,7 @@ body {
   box-shadow: none;
 }
 
+/* ---------- Status Row ---------- */
 .status-row {
   display: flex;
   justify-content: space-between;
@@ -171,14 +183,52 @@ body {
   color: var(--muted);
 }
 .status-ok {
-  color: var(--success);
+  color: var(--success-text);
   font-weight: 600;
 }
 .status-error {
-  color: var(--danger);
+  color: var(--danger-text);
   font-weight: 600;
 }
 
+/* ---------- Payment Result Box ---------- */
+.result-box {
+  padding: 16px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  animation: fadeIn 0.25s ease-in;
+}
+.result-box.success {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+}
+.result-box.failed {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+}
+.result-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.result-box table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.result-box td {
+  padding: 6px 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  word-break: break-all;
+}
+.result-box td:first-child {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* ---------- Footer ---------- */
 .card-footer {
   background: linear-gradient(
     180deg,
@@ -192,6 +242,19 @@ body {
   color: var(--muted);
 }
 
+/* ---------- Animations ---------- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Responsive ---------- */
 @media (max-width: 760px) {
   .card {
     max-width: 520px;
