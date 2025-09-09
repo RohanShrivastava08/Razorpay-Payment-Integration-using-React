@@ -1,3 +1,4 @@
+// api/order.js
 const Razorpay = require("razorpay");
 
 module.exports = async (req, res) => {
@@ -9,7 +10,7 @@ module.exports = async (req, res) => {
   const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = process.env;
 
   if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-    console.error("Missing Razorpay environment variables");
+    console.error("❌ Missing Razorpay env vars");
     return res.status(500).json({ error: "Server config error" });
   }
 
@@ -20,7 +21,7 @@ module.exports = async (req, res) => {
     });
 
     const order = await razorpay.orders.create({
-      amount: 10000, // ₹100 in paise
+      amount: 10000,
       currency: "INR",
       receipt: "RCP_" + Date.now(),
     });
@@ -28,10 +29,10 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       amount: order.amount,
       order_id: order.id,
-      key: RAZORPAY_KEY_ID, // safe to expose (public key)
+      key: RAZORPAY_KEY_ID,
     });
   } catch (err) {
-    console.error("Razorpay order error:", err);
-    return res.status(500).json({ error: "Order creation failed" });
+    console.error("❌ Razorpay order error:", err);
+    return res.status(500).json({ error: err.message || "Order creation failed" });
   }
 };
