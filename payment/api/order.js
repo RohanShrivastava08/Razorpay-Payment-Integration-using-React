@@ -1,6 +1,7 @@
-const Razorpay = require("razorpay");
+// api/order.js
+import Razorpay from "razorpay";
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -9,8 +10,7 @@ module.exports = async (req, res) => {
   const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = process.env;
 
   if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-    console.error("❌ Missing Razorpay env vars");
-    return res.status(500).json({ error: "Missing Razorpay env vars (set in Vercel)" });
+    return res.status(500).json({ error: "Missing Razorpay environment variables" });
   }
 
   try {
@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
     });
 
     const order = await razorpay.orders.create({
-      amount: 10000,
+      amount: 10000, // ₹100
       currency: "INR",
       receipt: "RCP_" + Date.now(),
     });
@@ -28,21 +28,10 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       amount: order.amount,
       order_id: order.id,
-      key: RAZORPAY_KEY_ID,
+      key: RAZORPAY_KEY_ID, // safe to expose
     });
   } catch (err) {
-    // Log full error to Vercel logs
-    console.error("❌ Razorpay order error:", err);
-
-    // Return a readable debug response (temporarily) so you can see details in browser
-    const message = err && err.error && err.error.description
-      ? err.error.description
-      : (err && err.message) || "Order creation failed";
-
-    return res.status(500).json({
-      error: message,
-      code: err && err.error && err.error.code,
-      raw: err && typeof err === "object" ? JSON.stringify(err) : String(err)
-    });
+    console.error("Razorpay error:", err);
+    return res.status(500).json({ error: err.message || "Order creation failed" });
   }
-};
+}

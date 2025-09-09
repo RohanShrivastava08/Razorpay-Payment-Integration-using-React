@@ -28,7 +28,7 @@ const App = () => {
       const options = {
         amount: data.amount,
         order_id: orderId,
-        key: data.key, // received from backend
+        key: data.key, 
         currency: "INR",
         name: "Test Company",
         description: "Test Transaction",
