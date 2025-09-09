@@ -1,4 +1,3 @@
-// App.jsx
 import React from "react";
 import { useRazorpay } from "react-razorpay";
 
@@ -16,13 +15,10 @@ const App = () => {
       if (error) {
         alert("Error loading Razorpay: " + error);
         return;
-      } 
+      }
 
-      const apiBase = (
-        import.meta.env.VITE_API_URL || "http://localhost:8000"
-      ).replace(/\/$/, "");
-      console.log("Fetching from:", `${apiBase}/order`);
-      const response = await fetch(`${apiBase}/order`);
+      // Call the Vercel serverless function
+      const response = await fetch("/api/order");
       if (!response.ok) {
         throw new Error("Failed to create order: " + response.statusText);
       }
@@ -30,9 +26,9 @@ const App = () => {
       const orderId = data.id || data.order_id;
 
       const options = {
-        amount: AMOUNT,
+        amount: data.amount,
         order_id: orderId,
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_RFStPkOWxpjAKq",
+        key: data.key, // received from backend
         currency: "INR",
         name: "Test Company",
         description: "Test Transaction",
@@ -53,13 +49,8 @@ const App = () => {
 
       const RazorpayConstructor = Razorpay || window.Razorpay;
       if (!RazorpayConstructor || typeof RazorpayConstructor !== "function") {
-        alert(
-          "Razorpay checkout didn't load correctly. Check console for details."
-        );
-        console.error("Razorpay constructor not available", {
-          Razorpay,
-          windowRazorpay: window.Razorpay,
-        });
+        alert("Razorpay checkout didn't load correctly. Check console for details.");
+        console.error("Razorpay constructor not available", { Razorpay, windowRazorpay: window.Razorpay });
         return;
       }
 
