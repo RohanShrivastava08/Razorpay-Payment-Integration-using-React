@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { useRazorpay } from "react-razorpay";
 
-const AMOUNT = 10000;
-
 const App = () => {
   const { error, isLoading, Razorpay } = useRazorpay();
-  const [paymentResult, setPaymentResult] = useState(null); // store payment status
+  const [amount, setAmount] = useState(100); // default 100 INR
+  const [paymentResult, setPaymentResult] = useState(null);
 
   const payNow = async () => {
     try {
@@ -18,8 +17,16 @@ const App = () => {
         return;
       }
 
-      const response = await fetch("/api/order");
+      // Convert INR to paise for Razorpay
+      const amountInPaise = amount * 100;
+
+      const response = await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: amountInPaise }),
+      });
       if (!response.ok) throw new Error("Failed to create order: " + response.statusText);
+
       const data = await response.json();
       const orderId = data.id || data.order_id;
 
@@ -29,7 +36,7 @@ const App = () => {
         key: data.key,
         currency: "INR",
         name: "Test Company",
-        description: "Test Transaction",
+        description: "Custom Transaction",
         handler: function (response) {
           setPaymentResult({
             status: "success",
@@ -68,6 +75,12 @@ const App = () => {
     }
   };
 
+  // Reset to allow new payment
+  const resetPayment = () => {
+    setPaymentResult(null);
+    setAmount(100);
+  };
+
   return (
     <div className="page">
       <div className="card">
@@ -82,8 +95,8 @@ const App = () => {
         </header>
 
         <section className="card-body">
-          {/* ✅ Payment result box */}
-          {paymentResult && (
+          {/* Payment result box */}
+          {paymentResult ? (
             <div className={`result-box ${paymentResult.status}`}>
               {paymentResult.status === "success" ? (
                 <>
@@ -103,31 +116,44 @@ const App = () => {
                   {paymentResult.code && <p>Error Code: {paymentResult.code}</p>}
                 </>
               )}
+              <div className="actions">
+                <button className="btn btn-primary" onClick={resetPayment}>
+                  Back
+                </button>
+              </div>
             </div>
+          ) : (
+            <>
+              {/* Amount input */}
+              <div className="amount-box">
+                <div className="amount-left">
+                  <div className="label">Enter Amount</div>
+                  <input
+                    type="number"
+                    className="amount-input"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    min="1"
+                  />
+                </div>
+                <div className="amount-right">
+                  <div className="label">Currency</div>
+                  <div className="currency">INR</div>
+                </div>
+              </div>
+
+              {/* Pay button */}
+              <div className="actions">
+                <button
+                  className={`btn btn-primary${isLoading ? " disabled" : ""}`}
+                  onClick={payNow}
+                  disabled={isLoading || !amount}
+                >
+                  {isLoading ? "Loading…" : `Pay ₹${amount}`}
+                </button>
+              </div>
+            </>
           )}
-
-          {/* Payment amount */}
-          <div className="amount-box">
-            <div className="amount-left">
-              <div className="label">Amount</div>
-              <div className="amount">₹100.00</div>
-            </div>
-            <div className="amount-right">
-              <div className="label">Currency</div>
-              <div className="currency">INR</div>
-            </div>
-          </div>
-
-          {/* Pay button */}
-          <div className="actions">
-            <button
-              className={`btn btn-primary${isLoading ? " disabled" : ""}`}
-              onClick={payNow}
-              disabled={isLoading}
-            >
-              {isLoading ? "Loading…" : "Pay ₹100"}
-            </button>
-          </div>
         </section>
 
         <footer className="card-footer">

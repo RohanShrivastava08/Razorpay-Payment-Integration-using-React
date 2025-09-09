@@ -137,6 +137,20 @@ body {
   font-size: 16px;
 }
 
+.amount-input {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 16px;
+  width: 120px;
+  font-weight: 500;
+}
+.amount-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
 /* ---------- Buttons ---------- */
 .actions {
   display: flex;

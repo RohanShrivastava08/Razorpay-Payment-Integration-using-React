@@ -1,4 +1,3 @@
-// api/order.js
 import Razorpay from "razorpay";
 
 export default async function handler(req, res) {
@@ -8,19 +7,21 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = process.env;
-
   if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
     return res.status(500).json({ error: "Missing Razorpay environment variables" });
   }
 
   try {
+    const body = req.body ? JSON.parse(req.body) : {};
+    const amount = body.amount || 10000; // default ₹100
+
     const razorpay = new Razorpay({
       key_id: RAZORPAY_KEY_ID,
       key_secret: RAZORPAY_KEY_SECRET,
     });
 
     const order = await razorpay.orders.create({
-      amount: 10000, // ₹100
+      amount,
       currency: "INR",
       receipt: "RCP_" + Date.now(),
     });
@@ -28,7 +29,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       amount: order.amount,
       order_id: order.id,
-      key: RAZORPAY_KEY_ID, // safe to expose
+      key: RAZORPAY_KEY_ID,
     });
   } catch (err) {
     console.error("Razorpay error:", err);
