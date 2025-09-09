@@ -1,11 +1,12 @@
+// src/App.jsx
 import React, { useState } from "react";
 import { useRazorpay } from "react-razorpay";
 
-const AMOUNT = 10000;
+const AMOUNT = 10000; // ₹100 in paise
 
 const App = () => {
   const { error, isLoading, Razorpay } = useRazorpay();
-  const [paymentResult, setPaymentResult] = useState(null); // store payment status
+  const [result, setResult] = useState(null); // { status: 'success'|'failed', ... }
 
   const payNow = async () => {
     try {
@@ -19,19 +20,22 @@ const App = () => {
       }
 
       const response = await fetch("/api/order");
-      if (!response.ok) throw new Error("Failed to create order: " + response.statusText);
+      if (!response.ok) {
+        throw new Error("Failed to create order: " + response.statusText);
+      }
       const data = await response.json();
       const orderId = data.id || data.order_id;
 
       const options = {
-        amount: data.amount,
+        amount: data.amount || AMOUNT,
         order_id: orderId,
-        key: data.key,
+        key: data.key, // value sent from backend
         currency: "INR",
         name: "Test Company",
         description: "Test Transaction",
         handler: function (response) {
-          setPaymentResult({
+          // no alerts — store result and show Back button
+          setResult({
             status: "success",
             paymentId: response.razorpay_payment_id,
             orderId: response.razorpay_order_id,
@@ -43,34 +47,42 @@ const App = () => {
           email: "rajorsingh@example.com",
           contact: "9876543210",
         },
-        theme: { color: "#4f46e5" },
+        theme: {
+          color: "#4f46e5",
+        },
       };
 
       const RazorpayConstructor = Razorpay || window.Razorpay;
       if (!RazorpayConstructor || typeof RazorpayConstructor !== "function") {
-        console.error("Razorpay checkout not available");
+        alert("Razorpay checkout didn't load correctly. Check console for details.");
+        console.error("Razorpay constructor not available", { Razorpay, windowRazorpay: window.Razorpay });
         return;
       }
 
       const razor = new RazorpayConstructor(options);
 
       razor.on("payment.failed", function (response) {
-        setPaymentResult({
+        setResult({
           status: "failed",
-          error: response.error.description,
-          code: response.error.code,
+          error: response?.error?.description || "Payment failed",
+          code: response?.error?.code,
         });
       });
 
       razor.open();
     } catch (err) {
-      setPaymentResult({ status: "failed", error: err.message });
+      console.error("payNow error:", err);
+      setResult({ status: "failed", error: err.message || String(err) });
     }
+  };
+
+  const goBack = () => {
+    setResult(null);
   };
 
   return (
     <div className="page">
-      <div className="card">
+      <div className="card" role="region" aria-label="Payment card">
         <header className="card-header">
           <div className="brand">
             <div className="brand-logo">TC</div>
@@ -82,58 +94,86 @@ const App = () => {
         </header>
 
         <section className="card-body">
-          {/* ✅ Payment result box */}
-          {paymentResult && (
-            <div className={`result-box ${paymentResult.status}`}>
-              {paymentResult.status === "success" ? (
+          {/* Result box — shown after payment attempt */}
+          {result && (
+            <div className={`result-box ${result.status === "success" ? "success" : "failed"}`}>
+              {result.status === "success" ? (
                 <>
                   <h3>✅ Payment Successful</h3>
                   <table>
                     <tbody>
-                      <tr><td>Payment ID</td><td>{paymentResult.paymentId}</td></tr>
-                      <tr><td>Order ID</td><td>{paymentResult.orderId}</td></tr>
-                      <tr><td>Signature</td><td>{paymentResult.signature}</td></tr>
+                      <tr>
+                        <td>Payment ID</td>
+                        <td>{result.paymentId}</td>
+                      </tr>
+                      <tr>
+                        <td>Order ID</td>
+                        <td>{result.orderId}</td>
+                      </tr>
+                      <tr>
+                        <td>Signature</td>
+                        <td>{result.signature}</td>
+                      </tr>
                     </tbody>
                   </table>
                 </>
               ) : (
                 <>
                   <h3>❌ Payment Failed</h3>
-                  <p>{paymentResult.error}</p>
-                  {paymentResult.code && <p>Error Code: {paymentResult.code}</p>}
+                  <p>{result.error}</p>
+                  {result.code && <p>Error Code: {result.code}</p>}
                 </>
               )}
+
+              <div style={{ marginTop: 14 }}>
+                <button className="btn btn-primary" onClick={goBack}>
+                  Back
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Payment amount */}
-          <div className="amount-box">
-            <div className="amount-left">
-              <div className="label">Amount</div>
-              <div className="amount">₹100.00</div>
-            </div>
-            <div className="amount-right">
-              <div className="label">Currency</div>
-              <div className="currency">INR</div>
-            </div>
-          </div>
+          {/* Payment card (only shown when no result) */}
+          {!result && (
+            <>
+              <div className="amount-box">
+                <div className="amount-left">
+                  <div className="label">Amount</div>
+                  <div className="amount">₹100.00</div>
+                </div>
+                <div className="amount-right">
+                  <div className="label">Currency</div>
+                  <div className="currency">INR</div>
+                </div>
+              </div>
 
-          {/* Pay button */}
-          <div className="actions">
-            <button
-              className={`btn btn-primary${isLoading ? " disabled" : ""}`}
-              onClick={payNow}
-              disabled={isLoading}
-            >
-              {isLoading ? "Loading…" : "Pay ₹100"}
-            </button>
-          </div>
+              <div className="actions">
+                <button
+                  className={`btn btn-primary${isLoading ? " disabled" : ""}`}
+                  onClick={payNow}
+                  disabled={isLoading}
+                  aria-disabled={isLoading}
+                >
+                  {isLoading ? "Loading…" : "Pay ₹100"}
+                </button>
+              </div>
+
+              <div className="status-row">
+                <div className="status-left">
+                  {error ? (
+                    <span className="status-error">Error loading checkout</span>
+                  ) : (
+                    <span className="status-ok">{isLoading ? "Checkout loading…" : "Ready to pay"}</span>
+                  )}
+                </div>
+                <div className="status-right">Secure · Fast · Reliable</div>
+              </div>
+            </>
+          )}
         </section>
 
         <footer className="card-footer">
-          <div className="small">
-            By proceeding you agree to the terms and privacy policy.
-          </div>
+          <div className="small">By proceeding you agree to the terms and privacy policy.</div>
         </footer>
       </div>
     </div>
