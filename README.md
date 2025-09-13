@@ -8,7 +8,13 @@
 
 <img width="1470" height="956" alt="Image" src="https://github.com/user-attachments/assets/b9e09cf4-569d-4b49-93e6-012da02af983" />
 
-- A full-stack project that integrates Razorpay Checkout into a modern React frontend with a secure serverless backend on Vercel.
+- A full-stack project that brings Razorpay Checkout into a modern React frontend, backed by a secure serverless API on Vercel.
+
+- It shows how to safely handle keys with environment variables while keeping the payment flow smooth and professional.
+
+- The UI is clean, lightweight, and provides styled success/failure result cards instead of alerts.
+
+- Perfect as a starter template for anyone building a scalable payment integration.
 
 
 ## 📋 Table of Contents
